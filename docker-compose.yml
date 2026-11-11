@@ -1,0 +1,32 @@
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: app
+      POSTGRES_PASSWORD: app
+      POSTGRES_DB: app
+    ports: ["5432:5432"]
+    volumes: [pgdata:/var/lib/postgresql/data]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U app"]
+      interval: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    ports: ["6379:6379"]
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes: [redisdata:/data]
+
+  seaweedfs:
+    image: chrislusf/seaweedfs
+    command: ["mini", "-dir=/data"]
+    environment:
+      AWS_ACCESS_KEY_ID: devaccess
+      AWS_SECRET_ACCESS_KEY: devsecret123
+      S3_BUCKET: app-uploads
+    ports:
+      - "8333:8333"     # S3 API
+      - "23646:23646"   # Admin UI
+    volumes: [seaweeddata:/data]
+volumes: { pgdata: {}, redisdata: {}, seaweeddata: {} }
